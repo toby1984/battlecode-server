@@ -1,6 +1,7 @@
 package battlecode.engine.instrumenter;
 
 import battlecode.engine.ErrorReporter;
+
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 
@@ -38,8 +39,13 @@ public class ClassReferenceUtil {
     }
 
     static void fileLoadError(String filename) {
-        ErrorReporter.report(String.format("Error loading %s", "Check that the '%s' file exists and is not corrupted.", filename, filename));
-        throw new InstrumentationException();
+    	fileLoadError(filename,null);
+    }
+    
+    static void fileLoadError(String filename,Throwable t) {
+        final String message = String.format("Error loading %s , check that the '%s' file exists and is not corrupted.", filename, filename);
+		ErrorReporter.report(message);
+        throw new InstrumentationException( message , t);
     }
 
     // the static constructor basically loads the whitelist files and caches them in allowedPackages and disallowedClasses
@@ -58,7 +64,7 @@ public class ClassReferenceUtil {
                 allowedPackages.add(line);
             }
         } catch (Exception e) {
-            fileLoadError("AllowedPackages.txt");
+            fileLoadError("AllowedPackages.txt",e);
         }
 
         // load disallowed classes
@@ -68,7 +74,7 @@ public class ClassReferenceUtil {
                 disallowedClasses.add(line);
             }
         } catch (Exception e) {
-            fileLoadError("DisallowedClasses.txt");
+            fileLoadError("DisallowedClasses.txt",e);
         }
 
     }

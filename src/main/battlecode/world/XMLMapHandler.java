@@ -824,6 +824,11 @@ class XMLMapHandler extends DefaultHandler {
     }
 
     public static XMLMapHandler loadMap(String mapName, String mapPath) {
+    	
+    	if ( mapName == null || mapName.trim().length() == 0 ) {
+    		throw new IllegalArgumentException("Map name must not be NULL/blank");
+    	}
+    	
         // Create a new XMLMapHandler.
         XMLMapHandler handler = new XMLMapHandler();
 

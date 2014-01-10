@@ -14,7 +14,7 @@ public class ErrorReporter {
 
     public static void report(String message, boolean ourFault) {
         printHeader();
-        System.out.println(message);
+        new Exception(message).printStackTrace();
         if (ourFault) {
             System.out.print("\n\n");
             printReportString();
