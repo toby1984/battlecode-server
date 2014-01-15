@@ -1,5 +1,6 @@
 package battlecode.engine.scheduler;
 
+import battlecode.common.Team;
 import battlecode.engine.ErrorReporter;
 
 /**
@@ -16,13 +17,14 @@ public class ScheduledRunnable implements Runnable {
      *
      * @param r  the Runnable to be run in the Scheduler
      * @param ID the integer ID that the Scheduler will associate with the given Runnable's thread
+     * @param team The robot's team if ID is a robot ID , <code>null</code> otherwise.
      */
-    public ScheduledRunnable(Runnable r, int ID) {
+    public ScheduledRunnable(Runnable r, int ID,Team team) {
         myID = ID;
         myRunnable = r;
         Thread t = new Thread(this, "robot " + ID);
         t.setDaemon(true);
-        Scheduler.add(t, ID);
+        Scheduler.add(t, ID , team );
         t.start();
     }
 

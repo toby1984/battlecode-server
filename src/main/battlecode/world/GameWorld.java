@@ -26,6 +26,7 @@ import battlecode.engine.ErrorReporter;
 import battlecode.engine.GenericWorld;
 import battlecode.engine.instrumenter.RobotDeathException;
 import battlecode.engine.instrumenter.RobotMonitor;
+import battlecode.engine.instrumenter.RobotMonitor.RobotData;
 import battlecode.engine.signal.AutoSignalHandler;
 import battlecode.engine.signal.Signal;
 import battlecode.engine.signal.SignalHandler;
@@ -592,8 +593,10 @@ public class GameWorld extends BaseWorld<InternalObject> implements GenericWorld
             r.processBeginningOfTurn();
     }
 
-    public void endOfExecution(int robotID) {
-        InternalRobot r = (InternalRobot) getObjectByID(robotID);
+    public void endOfExecution(RobotMonitor.RobotData data) 
+    {
+    	getGameStats().incrementBytecodesUsed( data.team , data.getAndResetTotalBytecodesUsed() );    	
+        InternalRobot r = (InternalRobot) getObjectByID( data.ID );
         // if the robot is dead, it won't be in the map any more
         if (r != null) {
             r.setBytecodesUsed(RobotMonitor.getBytecodesUsed());
@@ -1101,4 +1104,9 @@ public class GameWorld extends BaseWorld<InternalObject> implements GenericWorld
     protected void adjustSpawnRate(Team t) {
     	teamSpawnRate[t.ordinal()] = GameConstants.HQ_SPAWN_DELAY_CONSTANT_1 + Math.pow(countRobots(t), GameConstants.HQ_SPAWN_DELAY_CONSTANT_2);//10*GameConstants.HQ_SPAWN_DELAY/(10*GameConstants.HQ_SPAWN_DELAY/teamSpawnRate[t.ordinal()]+1);
     }
+
+	@Override
+	public void robotThreadDied(RobotData data) {
+		getGameStats().incrementBytecodesUsed( data.team , data.getAndResetTotalBytecodesUsed() );
+	}
 }

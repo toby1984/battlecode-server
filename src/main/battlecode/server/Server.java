@@ -3,6 +3,7 @@ package battlecode.server;
 import battlecode.common.Team;
 import battlecode.engine.ErrorReporter;
 import battlecode.engine.GameState;
+import battlecode.engine.instrumenter.RobotMonitor;
 import battlecode.engine.signal.Signal;
 import battlecode.serial.*;
 import battlecode.serial.notification.*;
@@ -398,6 +399,9 @@ public class Server implements Observer, Runnable {
         MatchFooter footer = match.getFooter();
 
         say(match.getWinnerString());
+        for ( Team t : Team.values() ) {
+        	say("Team "+t+" executed: "+gameStats.getTotalByteCodesExecuted( t )+" bytecodes");
+        }
         say("-------------------- Match Finished --------------------");
 
         double timeDiff = (System.currentTimeMillis() - startTime) / 1000.0;

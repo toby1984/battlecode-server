@@ -1,8 +1,10 @@
 package battlecode.serial;
 
-import battlecode.common.Team;
-
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicLong;
+
+import battlecode.common.Team;
+import battlecode.engine.instrumenter.RobotMonitor;
 
 /**
  * Used to keep track of various statistics in a given
@@ -23,12 +25,21 @@ public class GameStats implements Serializable {
     private DominationFactor dominationFactor = null;
     private double excitementFactor = 0.0;
 
+    private final AtomicLong[] totalByteCodesExecuted;
     private int timeToTallestTower = 0;
     private int tallestTower = 0;
 
     public GameStats() {
+    	totalByteCodesExecuted = new AtomicLong[ Team.values().length ];
+    	for ( int i =0 ; i < Team.values().length ; i++ ) {
+    		totalByteCodesExecuted[i] = new AtomicLong(0);
+    	}
     }
 
+    public long getTotalByteCodesExecuted(Team team) {
+		return totalByteCodesExecuted[team.ordinal()].get();
+	}
+    
     public void setUnitKilled(Team t, int numRounds) {
         int index = t.opponent().ordinal();
         if (index < 2 && timeToFirstKill[index] == 0)
@@ -111,4 +122,11 @@ public class GameStats implements Serializable {
     public int getTallestTower() {
         return tallestTower;
     }
+
+	public void incrementBytecodesUsed(Team team,long byteCodesUsed) 
+	{
+		if ( team != null ) {
+			totalByteCodesExecuted[ team.ordinal() ].addAndGet( byteCodesUsed );
+		}
+	}
 }

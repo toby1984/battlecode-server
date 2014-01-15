@@ -1,14 +1,16 @@
 package battlecode.engine.instrumenter;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+
+import battlecode.common.Team;
 import battlecode.engine.GenericRobot;
 import battlecode.engine.GenericWorld;
 import battlecode.engine.instrumenter.lang.RoboPrintStream;
 import battlecode.engine.instrumenter.lang.SilencedPrintStream;
 import battlecode.engine.scheduler.Scheduler;
 import battlecode.server.Config;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * RobotMonitor is a singleton class for monitoring robots' bytecode execution and stack size, and killing robots' threads.  Player's classes should
@@ -41,10 +43,17 @@ public class RobotMonitor {
         public int bytecodesLeft;
         public int debugLevel = 0;
         public final int ID;
+        public final Team team;
+        public final AtomicLong totalBytecodesExecuted = new AtomicLong(0);
         public boolean thrownRobotDeathException = false;
 
-        public RobotData(int ID) {
+        public RobotData(int ID,Team team) {
             this.ID = ID;
+            this.team=team;
+        }
+        
+        public long getAndResetTotalBytecodesUsed() {
+        	return totalBytecodesExecuted.getAndSet(0);
         }
     }
 
@@ -141,7 +150,7 @@ public class RobotMonitor {
      */
     public static void incrementBytecodes(int numBytecodes) {
         bytecodesLeft -= numBytecodes;
-
+        
         while (bytecodesLeft <= 0) {
             endRunner();
         }
@@ -151,7 +160,8 @@ public class RobotMonitor {
      * Ends the run of the currently active robot.
      */
     public static void endRunner() {
-        myGameWorld.endOfExecution(currentRobotData.ID);
+    	currentRobotData.totalBytecodesExecuted.addAndGet( getBytecodesUsed() );
+        myGameWorld.endOfExecution(currentRobotData);
         currentRobotData.debugLevel = debugLevel;
         if (debugLevel == 0)
             currentRobotData.bytecodesLeft = bytecodesLeft;

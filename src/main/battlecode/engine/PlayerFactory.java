@@ -42,7 +42,7 @@ public class PlayerFactory {
         }
 
         // finally, create the player's thread, and let it loose
-        new ScheduledRunnable(new RobotRunnable(playerClass, rc), rc.getRobot().getID());
+        new ScheduledRunnable(new RobotRunnable(playerClass, rc), rc.getRobot().getID() , rc.getRobot().getTeam() );
 
     }
 }

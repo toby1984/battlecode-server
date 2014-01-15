@@ -49,6 +49,7 @@ public class Engine {
             gameWorld = tempGameWorld;
         }
         gameWorld.resetStatic();
+        Scheduler.setGameworld(gameWorld);
         RobotMonitor.setGameWorld(gameWorld);
         RoboRandom.setMapSeed(gameWorld.getMapSeed());
         Scheduler.start();

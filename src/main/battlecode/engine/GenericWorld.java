@@ -1,5 +1,7 @@
 package battlecode.engine;
 
+import battlecode.engine.instrumenter.RobotMonitor;
+import battlecode.engine.instrumenter.RobotMonitor.RobotData;
 import battlecode.engine.signal.SignalHandler;
 
 /**
@@ -10,7 +12,7 @@ public interface GenericWorld extends GameWorldViewer, SignalHandler {
 
     public void beginningOfExecution(int id);
 
-    public void endOfExecution(int id);
+    public void endOfExecution(RobotMonitor.RobotData data);
 
     public void processBeginningOfRound();
 
@@ -28,4 +30,5 @@ public interface GenericWorld extends GameWorldViewer, SignalHandler {
 
     public int nextID();
 
+	public void robotThreadDied(RobotData data);
 }

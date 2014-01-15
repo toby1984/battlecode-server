@@ -1,9 +1,11 @@
 package battlecode.engine.scheduler;
 
-import battlecode.engine.ErrorReporter;
-import battlecode.engine.instrumenter.RobotMonitor;
-
 import java.util.concurrent.locks.LockSupport;
+
+import battlecode.common.Team;
+import battlecode.engine.ErrorReporter;
+import battlecode.engine.GenericWorld;
+import battlecode.engine.instrumenter.RobotMonitor;
 
 
 public class Scheduler {
@@ -22,10 +24,12 @@ public class Scheduler {
         }
     }
 
+    private volatile static GenericWorld gameworld;
+    
     private volatile static ScheduledThread head, current;
 
     static {
-        head = new ScheduledThread(null, new RobotMonitor.RobotData(-1));
+        head = new ScheduledThread(null, new RobotMonitor.RobotData(-1,null));
         head.next = head;
         head.prev = head;
         current = head;
@@ -44,8 +48,9 @@ public class Scheduler {
     /**
      * Adds a new thread to the scheduler.
      */
-    public static void add(Thread t, int ID) {
-        ScheduledThread st = new ScheduledThread(t, new RobotMonitor.RobotData(ID));
+    public static void add(Thread t, int ID,Team team) {
+        RobotMonitor.RobotData data = new RobotMonitor.RobotData(ID,team);
+		ScheduledThread st = new ScheduledThread(t, data);
         ScheduledThread last = head.prev;
         last.next = st;
         st.prev = last;
@@ -59,6 +64,7 @@ public class Scheduler {
      * n
      */
     public static void die() {
+    	gameworld.robotThreadDied( current.data );
         ScheduledThread last = current.prev;
         current = current.next;
         current.prev = last;
@@ -110,4 +116,7 @@ public class Scheduler {
         wakeupNext();
     }
 
+    public static void setGameworld(GenericWorld gameworld) {
+		Scheduler.gameworld = gameworld;
+	}
 }
