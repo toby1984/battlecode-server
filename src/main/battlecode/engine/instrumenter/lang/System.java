@@ -27,7 +27,7 @@ public final class System {
     public static void arraycopy(Object src, int srcPos, Object dest, int destPos, int length) {
         java.lang.System.arraycopy(src, srcPos, dest, destPos, length);
         if (length > 0)
-            RobotMonitor.incrementBytecodes(length);
+            RobotMonitor.incrementBytecodes(length,"System#arrayCopy()");
     }
 
     public static String getProperty(String key) {
@@ -50,7 +50,7 @@ public final class System {
             throw new java.io.EOFException();
         }
     };
-
+    
     /*
      public static long currentTimeMillis() {
          return battlecode.common.GameConstants.BYTECODE_LIMIT*battlecode.engine.Engine.getRoundNum()+RobotMonitor.getBytecodeNum();

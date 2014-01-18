@@ -100,7 +100,8 @@ public class IndividualClassLoader extends InstrumentingClassLoader {
 		    if(!retryLoad)
 			retry = false;
 		    try {
-			classBytes = instrument(name, true, teamPackageName);
+		    final boolean checkDisallowedRefs = true;
+			classBytes = instrument(name, checkDisallowedRefs , teamPackageName);			
 			//dumpToFile(name,classBytes);
 			retry = false;
 		    } catch (InstrumentationException ie) {			

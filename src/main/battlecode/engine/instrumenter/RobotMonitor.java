@@ -1,7 +1,10 @@
 package battlecode.engine.instrumenter;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import battlecode.common.Team;
@@ -33,6 +36,8 @@ public class RobotMonitor {
     private static int bytecodeLimit;
     private static int bytecodesLeft;
 
+    private static Map<String,Long> byteCodesPerMethodMap;
+    
     private static GenericWorld myGameWorld = null;
 
 
@@ -44,6 +49,7 @@ public class RobotMonitor {
         public int debugLevel = 0;
         public final int ID;
         public final Team team;
+        public final Map<String,Long> byteCodesPerMethodMap = new ConcurrentHashMap<String,Long>();
         public final AtomicLong totalBytecodesExecuted = new AtomicLong(0);
         public boolean thrownRobotDeathException = false;
 
@@ -93,6 +99,7 @@ public class RobotMonitor {
             myGameWorld.beginningOfExecution(newData.ID);
             GenericRobot robot = myGameWorld.getRobotByID(newData.ID);
             bytecodeLimit = robot.getBytecodeLimit();
+            byteCodesPerMethodMap = newData.byteCodesPerMethodMap;
             debugLevel = currentRobotData.debugLevel;
             currentRobotData.bytecodesLeft += bytecodeLimit;
             if (debugLevel == 0)
@@ -148,8 +155,15 @@ public class RobotMonitor {
      *
      * @param numBytecodes the number of bytecodes the robot just executed
      */
-    public static void incrementBytecodes(int numBytecodes) {
+    public static void incrementBytecodes(int numBytecodes,String methodSignature) {
         bytecodesLeft -= numBytecodes;
+        
+        Long existing = byteCodesPerMethodMap.get( methodSignature );
+        if ( existing != null ) {
+        	byteCodesPerMethodMap.put( methodSignature , new Long( existing.longValue() + numBytecodes ) );        	
+        } else {
+        	byteCodesPerMethodMap.put( methodSignature , new Long( numBytecodes ) );
+        }
         
         while (bytecodesLeft <= 0) {
             endRunner();

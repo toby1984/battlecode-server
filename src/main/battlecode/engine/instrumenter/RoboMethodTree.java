@@ -4,10 +4,7 @@ package battlecode.engine.instrumenter;
 // this in an attempt to fix a strange bug.  RoboMethodTree is more
 // extensible than RoboMethodAdapter, but also less well tested. -dgulotta
 
-import battlecode.common.GameConstants;
-import battlecode.engine.ErrorReporter;
-import org.objectweb.asm.*;
-import org.objectweb.asm.tree.*;
+import static org.objectweb.asm.tree.AbstractInsnNode.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -15,7 +12,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.objectweb.asm.tree.AbstractInsnNode.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FrameNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.LocalVariableNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.MultiANewArrayInsnNode;
+import org.objectweb.asm.tree.TryCatchBlockNode;
+import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.VarInsnNode;
+
+import battlecode.common.GameConstants;
+import battlecode.engine.ErrorReporter;
 
 public class RoboMethodTree extends MethodNode implements Opcodes {
 
@@ -26,6 +44,7 @@ public class RoboMethodTree extends MethodNode implements Opcodes {
     private final boolean silenced;
     private final boolean checkDisallowed;
     private final String methodDesc;    // the description of this method, e.g., "()V"
+    private final String methodSignature;
     private boolean codeVisited = false;    // tells whether visitCode() has been called
 
     // all the exception handlers we've seen in the code
@@ -57,6 +76,7 @@ public class RoboMethodTree extends MethodNode implements Opcodes {
         this.silenced = silenced;
         this.checkDisallowed = checkDisallowed;
         this.methodDesc = methodDesc;
+        this.methodSignature = className.replace("/", ".")+"#"+methodName+"( "+methodDesc+" )";
         methodWriter = mv;
         if (!checkedFastHash) {
             usingFastHash = Boolean.getBoolean(battlecode.server.Config.getGlobalConfig().get("bc.server.fast-hash"));
@@ -445,7 +465,8 @@ public class RoboMethodTree extends MethodNode implements Opcodes {
         if (bytecodeCtr == 0)
             return;
         instructions.insertBefore(n, new LdcInsnNode(new Integer(bytecodeCtr)));
-        instructions.insertBefore(n, new MethodInsnNode(INVOKESTATIC, "battlecode/engine/instrumenter/RobotMonitor", "incrementBytecodes", "(I)V"));
+        instructions.insertBefore(n, new LdcInsnNode( new String(methodSignature ) ) );         
+        instructions.insertBefore(n, new MethodInsnNode(INVOKESTATIC, "battlecode/engine/instrumenter/RobotMonitor", "incrementBytecodes", "(ILjava/lang/String;)V"));
         bytecodeCtr = 0;
     }
 

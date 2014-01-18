@@ -1,17 +1,39 @@
 package battlecode.server;
 
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Queue;
+
 import battlecode.common.Team;
 import battlecode.engine.ErrorReporter;
 import battlecode.engine.GameState;
-import battlecode.engine.instrumenter.RobotMonitor;
 import battlecode.engine.signal.Signal;
-import battlecode.serial.*;
-import battlecode.serial.notification.*;
+import battlecode.serial.ExtensibleMetadata;
+import battlecode.serial.GameStats;
+import battlecode.serial.MatchFooter;
+import battlecode.serial.MatchHeader;
+import battlecode.serial.MatchInfo;
+import battlecode.serial.RoundDelta;
+import battlecode.serial.RoundStats;
+import battlecode.serial.notification.Notification;
+import battlecode.serial.notification.NotificationHandler;
+import battlecode.serial.notification.PauseNotification;
+import battlecode.serial.notification.ResumeNotification;
+import battlecode.serial.notification.RunNotification;
+import battlecode.serial.notification.StartNotification;
 import battlecode.server.controller.Controller;
 import battlecode.server.proxy.Proxy;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Runs matches. Specifically, this class forms a pipeline connecting match and
@@ -398,10 +420,20 @@ public class Server implements Observer, Runnable {
         GameStats gameStats = match.getGameStats();
         MatchFooter footer = match.getFooter();
 
-        say(match.getWinnerString());
-        for ( Team t : Team.values() ) {
-        	say("Team "+t+" executed: "+gameStats.getTotalByteCodesExecuted( t )+" bytecodes");
-        }
+        say(match.getWinnerString()+" after "+match.getRoundNumber()+" rounds.");
+        
+//        final DecimalFormat DF = new DecimalFormat("###,###,###,###,##0");
+//        for ( Team t : Team.values() ) {
+//        	say("Team "+t+" executed: "+DF.format( gameStats.getTotalByteCodesExecuted( t ) )+" bytecodes");
+//        }
+//        
+//        say("-------------------- Team B --------------------");        
+//        final Map<Integer, Map<String, Long>> map = gameStats.getByteCodesPerRobot(Team.B);
+//        for ( Entry<String, Long> e : sumStats( map.values() , 20 ) )
+//        {
+//        	say( e.getKey()+" => "+DF.format( e.getValue() )+" bytecodes");
+//        }
+        
         say("-------------------- Match Finished --------------------");
 
         double timeDiff = (System.currentTimeMillis() - startTime) / 1000.0;
@@ -413,6 +445,45 @@ public class Server implements Observer, Runnable {
         }
 
         this.state = State.FINISHED;
+    }
+    
+    private List<Entry<String, Long>> sumStats( Collection<Map<String, Long>> maps , int size ) {
+
+    	final Map<String,Long> sum = new HashMap<String,Long>();
+    	
+    	long total = 0;
+    	for ( Map<String,Long> map : maps ) 
+    	{
+    		for ( Map.Entry<String,Long> method: map.entrySet() ) 
+    		{
+    			total += method.getValue().longValue();
+    		}
+    		
+    		for ( Map.Entry<String,Long> method: map.entrySet() ) {
+    			Long count = sum.get( method.getKey() );
+    			if ( count == null ) {
+    				sum.put( method.getKey() , method.getValue() );
+    			} else {
+    				sum.put( method.getKey() , new Long( count.longValue() + method.getValue().longValue() ) );
+    			}
+    		}
+    	}
+    	
+    	List<Map.Entry<String,Long>> list = new ArrayList<Entry<String, Long>>( sum.entrySet() );
+    	Collections.sort( list , new Comparator<Map.Entry<String,Long>>() {
+			@Override
+			public int compare(Entry<String, Long> o1, Entry<String, Long> o2) 
+			{
+				return o2.getValue().compareTo( o1.getValue() );
+			}
+		});
+    	
+        final DecimalFormat DF = new DecimalFormat("###,###,###,###,##0");
+    	say("Total bytecodes: "+DF.format( total) );    	
+    	if ( list.size() > size ) {
+    		return list.subList( 0 , size );
+    	}
+    	return list;
     }
 
     public State getState() {

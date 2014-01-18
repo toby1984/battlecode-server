@@ -1,10 +1,12 @@
 package battlecode.serial;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import battlecode.common.Team;
 import battlecode.engine.instrumenter.RobotMonitor;
+import battlecode.engine.instrumenter.lang.ConcurrentHashMap;
 
 /**
  * Used to keep track of various statistics in a given
@@ -28,11 +30,14 @@ public class GameStats implements Serializable {
     private final AtomicLong[] totalByteCodesExecuted;
     private int timeToTallestTower = 0;
     private int tallestTower = 0;
+    private final ConcurrentHashMap<Integer, Map<String,Long>>[] byteCodesPerRobotPerTeam;
 
     public GameStats() {
     	totalByteCodesExecuted = new AtomicLong[ Team.values().length ];
+    	byteCodesPerRobotPerTeam = new ConcurrentHashMap[ Team.values().length ];
     	for ( int i =0 ; i < Team.values().length ; i++ ) {
     		totalByteCodesExecuted[i] = new AtomicLong(0);
+    		byteCodesPerRobotPerTeam[i] = new ConcurrentHashMap<Integer, Map<String,Long>>();
     	}
     }
 
@@ -122,11 +127,16 @@ public class GameStats implements Serializable {
     public int getTallestTower() {
         return tallestTower;
     }
+    
+    public Map<Integer, Map<String, Long>> getByteCodesPerRobot(Team team) {
+		return byteCodesPerRobotPerTeam[team.ordinal()];
+	}
 
-	public void incrementBytecodesUsed(Team team,long byteCodesUsed) 
+	public void incrementBytecodesUsed(RobotMonitor.RobotData data) 
 	{
-		if ( team != null ) {
-			totalByteCodesExecuted[ team.ordinal() ].addAndGet( byteCodesUsed );
+		if ( data.team != null ) {
+			totalByteCodesExecuted[ data.team.ordinal() ].addAndGet( data.getAndResetTotalBytecodesUsed() );
+			byteCodesPerRobotPerTeam[data.team.ordinal()].putIfAbsent( data.ID , data.byteCodesPerMethodMap );
 		}
 	}
 }

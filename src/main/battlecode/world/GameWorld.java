@@ -589,7 +589,7 @@ public class GameWorld extends BaseWorld<InternalObject> implements GenericWorld
 
     public void endOfExecution(RobotMonitor.RobotData data) 
     {
-    	getGameStats().incrementBytecodesUsed( data.team , data.getAndResetTotalBytecodesUsed() );    	
+    	getGameStats().incrementBytecodesUsed( data );    	
         InternalRobot r = (InternalRobot) getObjectByID( data.ID );
         // if the robot is dead, it won't be in the map any more
         if (r != null) {
@@ -1057,6 +1057,6 @@ public class GameWorld extends BaseWorld<InternalObject> implements GenericWorld
 
 	@Override
 	public void robotThreadDied(RobotData data) {
-		getGameStats().incrementBytecodesUsed( data.team , data.getAndResetTotalBytecodesUsed() );
+		getGameStats().incrementBytecodesUsed( data );
 	}
 }
